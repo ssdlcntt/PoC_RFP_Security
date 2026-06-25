@@ -31,7 +31,7 @@ class IArecommendationApiView(APIView):
     def get(self, request, id):
         lookup_id = request.query_params.get("finding_id", id)
         with connection.cursor() as cursor:
-            cursor.execute(f"SELECT id FROM dojo_finding WHERE id = {lookup_id}")
+            cursor.execute("SELECT id FROM dojo_finding WHERE id = %s", [lookup_id])
             row = cursor.fetchone()
 
         finding_pk = row[0] if row else id
