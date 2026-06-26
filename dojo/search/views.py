@@ -15,7 +15,7 @@ from dojo.endpoint.queries import get_authorized_endpoints
 from dojo.endpoint.views import prefetch_for_endpoints
 from dojo.engagement.queries import get_authorized_engagements
 from dojo.filters import FindingFilter, FindingFilterWithoutObjectLookups
-from dojo.finding.queries import get_authorized_findings, get_authorized_vulnerability_ids, prefetch_for_findings
+from dojo.finding.queries import get_authorized_findings, get_authorized_vulnerability_ids, prefetch_for_findings,
 from dojo.forms import SimpleSearchForm
 from dojo.models import Engagement, Finding, Finding_Template, Languages, Product, Test
 from dojo.product.queries import get_authorized_app_analysis, get_authorized_products
@@ -117,6 +117,7 @@ def simple_search(request):
                           "not-tags" in operators or "not-test-tags" in operators or "not-engagement-tags" in operators or "not-product-tags" in operators
 
             search_vulnerability_ids = "vulnerability_id" in operators or not operators
+            search_pentester_ids = "pentester_id" in operators or not operators
 
             search_finding_id = "id" in operators
             search_findings = "finding" in operators or search_finding_id or search_tags or not operators
@@ -344,6 +345,12 @@ def simple_search(request):
                 vulnerability_ids = vulnerability_ids[:page_span]
             else:
                 vulnerability_ids = None
+            
+            if search_pentester_ids:
+                logger.debug("searching pentester_id")
+                findings = findings.extra(where=[f"dojo_finding.title LIKE '%%{keywords_query}%%'"])
+            else:
+                findings = None
 
             if keywords_query:
                 logger.debug("searching generic")
