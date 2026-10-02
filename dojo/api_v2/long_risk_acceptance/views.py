@@ -18,6 +18,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.http import FileResponse, Http404, HttpResponse
 from dojo.api_v2.api_error import ApiError
 from dojo.api_v2.long_risk_acceptance.notifications import Notification
+from django.conf import settings
 from drf_spectacular.utils import (
     OpenApiParameter,
     OpenApiResponse,
@@ -156,6 +157,12 @@ class RiskAcceptanceEngagementViewSet(prefetch.PrefetchListMixin,
         file = long_risk_acceptance_obj.path
         if not file:
             raise ApiError.not_found(contex="File not fonud")
+
+        # Validate file path to prevent path traversal
+        base_real = os.path.realpath(settings.MEDIA_ROOT)
+        target_real = os.path.realpath(file.path)
+        if os.path.commonpath([base_real, target_real]) != base_real:
+            raise ApiError.bad_request(contex="Invalid file path")
 
         try:
             file_handle = file.open("rb")
